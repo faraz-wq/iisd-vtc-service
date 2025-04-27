@@ -76,6 +76,13 @@ const handleFileUploads = async (req, res, next) => {
       });
     });
 
+    // Check if any files were uploaded
+    if (!req.files || Object.keys(req.files).length === 0) {
+      console.log("No files were uploaded.");
+      req.uploadedFiles = {}; // Attach an empty object to indicate no files were uploaded
+      return next();
+    }
+
     // Process each uploaded file and upload to Cloudinary
     const uploadedFiles = {}; 
     if (req.files["logo"]) {

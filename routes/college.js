@@ -4,13 +4,12 @@
  * It includes CRUD operations for colleges, as well as specific routes for uploading files (logo, banner, faculty images).
  */
 
-const express = require('express');
-const { College } = require('../models/collegeProgram');
-const authenticate = require('../middleware/auth');
-const cloudinaryUploadMiddleware = require('../middleware/cloudinary');
-const handleFileUploads = require('../middleware/fileUploadMiddleware');
-require('dotenv').config();
-
+const express = require("express");
+const { College } = require("../models/collegeProgram");
+const authenticate = require("../middleware/auth");
+const cloudinaryUploadMiddleware = require("../middleware/cloudinary");
+const handleFileUploads = require("../middleware/fileUploadMiddleware");
+require("dotenv").config();
 
 const router = express.Router();
 
@@ -53,8 +52,8 @@ router.post("/", authenticate, handleFileUploads, async (req, res) => {
     const { logo, banner, facultyImages } = req.uploadedFiles || {};
 
     const faculty = Array.isArray(req.body.faculty)
-    ? req.body.faculty
-    : JSON.parse(req.body.faculty || "[]");
+      ? req.body.faculty
+      : JSON.parse(req.body.faculty || "[]");
 
     const events = Array.isArray(req.body.events)
       ? req.body.events
@@ -66,7 +65,7 @@ router.post("/", authenticate, handleFileUploads, async (req, res) => {
       banner: banner || req.body.banner, // Use uploaded banner URL or fallback to body value
       faculty: faculty?.map((member, index) => ({
         ...member,
-        image: facultyImages?.[index] || member.image, 
+        image: facultyImages?.[index] || member.image,
       })),
       events: events.map((event) => ({
         title: event.title,
@@ -93,9 +92,9 @@ router.post("/", authenticate, handleFileUploads, async (req, res) => {
  * @returns {Object[]} 200 - An array of college objects, with referenced programs populated.
  * @returns {Object} 500 - Error message if an internal server error occurs.
  */
-router.get('/', authenticate, async (req, res) => {
+router.get("/", authenticate, async (req, res) => {
   try {
-    const colleges = await College.find().populate('programs'); // Populate referenced programs
+    const colleges = await College.find().populate("programs"); // Populate referenced programs
     res.json(colleges);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -111,10 +110,10 @@ router.get('/', authenticate, async (req, res) => {
  * @returns {Object} 404 - Error message if the college is not found.
  * @returns {Object} 500 - Error message if an internal server error occurs.
  */
-router.get('/:id', authenticate, async (req, res) => {
+router.get("/:id", authenticate, async (req, res) => {
   try {
-    const college = await College.findById(req.params.id).populate('programs'); // Populate referenced programs
-    if (!college) return res.status(404).json({ message: 'College not found' });
+    const college = await College.findById(req.params.id).populate("programs"); // Populate referenced programs
+    if (!college) return res.status(404).json({ message: "College not found" });
     res.json(college);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -154,10 +153,41 @@ router.get('/:id', authenticate, async (req, res) => {
  * @returns {Object} 404 - Error message if the college is not found.
  * @returns {Object} 400 - Error message if validation fails.
  */
-router.put('/:id', authenticate, async (req, res) => {
+router.put("/:id", authenticate, handleFileUploads, async (req, res) => {
   try {
-    const college = await College.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!college) return res.status(404).json({ message: 'College not found' });
+    const { logo, banner, facultyImages } = req.uploadedFiles || {};
+
+    if (facultyImages && facultyImages.length !== faculty.length) {
+      console.warn("Mismatch between faculty and facultyImages lengths.");
+    }
+    
+    const faculty = Array.isArray(req.body.faculty)
+      ? req.body.faculty
+      : JSON.parse(req.body.faculty || "[]");
+
+    const events = Array.isArray(req.body.events)
+      ? req.body.events
+      : JSON.parse(req.body.events || "[]");
+
+    const collegeData = {
+      ...req.body,
+      logo: logo || req.body.logo, // Use uploaded logo URL or fallback to body value
+      banner: banner || req.body.banner, // Use uploaded banner URL or fallback to body value
+      faculty: faculty?.map((member, index) => ({
+        ...member,
+        image: facultyImages?.[index] || member.image,
+      })),
+      events: events.map((event) => ({
+        title: event.title,
+        date: event.date,
+        description: event.description || "",
+      })),
+    };
+
+    const college = await College.findByIdAndUpdate(req.params.id, collegeData, {
+      new: true,
+    });
+    if (!college) return res.status(404).json({ message: "College not found" });
     res.json(college);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -173,11 +203,11 @@ router.put('/:id', authenticate, async (req, res) => {
  * @returns {Object} 404 - Error message if the college is not found.
  * @returns {Object} 500 - Error message if an internal server error occurs.
  */
-router.delete('/:id', authenticate, async (req, res) => {
+router.delete("/:id", authenticate, async (req, res) => {
   try {
     const college = await College.findByIdAndDelete(req.params.id);
-    if (!college) return res.status(404).json({ message: 'College not found' });
-    res.json({ message: 'College deleted successfully' });
+    if (!college) return res.status(404).json({ message: "College not found" });
+    res.json({ message: "College deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -193,27 +223,35 @@ router.delete('/:id', authenticate, async (req, res) => {
  * @returns {Object} 404 - Error message if the college is not found.
  * @returns {Object} 500 - Error message if an internal server error occurs.
  */
-router.post('/colleges/:id/upload-logo', authenticate, cloudinaryUploadMiddleware, async (req, res) => {
-  try {
-    const collegeId = req.params.id;
-    const filePath = req.cloudinaryUrl; // Path to the uploaded file
+router.post(
+  "/colleges/:id/upload-logo",
+  authenticate,
+  cloudinaryUploadMiddleware,
+  async (req, res) => {
+    try {
+      const collegeId = req.params.id;
+      const filePath = req.cloudinaryUrl; // Path to the uploaded file
 
-    // Update the college's logo field
-    const updatedCollege = await College.findByIdAndUpdate(
-      collegeId,
-      { logo: filePath },
-      { new: true }
-    );
+      // Update the college's logo field
+      const updatedCollege = await College.findByIdAndUpdate(
+        collegeId,
+        { logo: filePath },
+        { new: true }
+      );
 
-    if (!updatedCollege) {
-      return res.status(404).json({ message: 'College not found' });
+      if (!updatedCollege) {
+        return res.status(404).json({ message: "College not found" });
+      }
+
+      res.json({
+        message: "Logo uploaded successfully",
+        college: updatedCollege,
+      });
+    } catch (err) {
+      res.status(500).json({ message: err.message });
     }
-
-    res.json({ message: 'Logo uploaded successfully', college: updatedCollege });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
   }
-});
+);
 
 /**
  * @route POST /colleges/:id/upload-banner
@@ -225,27 +263,35 @@ router.post('/colleges/:id/upload-logo', authenticate, cloudinaryUploadMiddlewar
  * @returns {Object} 404 - Error message if the college is not found.
  * @returns {Object} 500 - Error message if an internal server error occurs.
  */
-router.post('/colleges/:id/upload-banner', authenticate, cloudinaryUploadMiddleware, async (req, res) => {
-  try {
-    const collegeId = req.params.id;
-    const filePath = req.cloudinaryUrl; // Path to the uploaded file
+router.post(
+  "/colleges/:id/upload-banner",
+  authenticate,
+  cloudinaryUploadMiddleware,
+  async (req, res) => {
+    try {
+      const collegeId = req.params.id;
+      const filePath = req.cloudinaryUrl; // Path to the uploaded file
 
-    // Update the college's banner field
-    const updatedCollege = await College.findByIdAndUpdate(
-      collegeId,
-      { banner: filePath },
-      { new: true }
-    );
+      // Update the college's banner field
+      const updatedCollege = await College.findByIdAndUpdate(
+        collegeId,
+        { banner: filePath },
+        { new: true }
+      );
 
-    if (!updatedCollege) {
-      return res.status(404).json({ message: 'College not found' });
+      if (!updatedCollege) {
+        return res.status(404).json({ message: "College not found" });
+      }
+
+      res.json({
+        message: "Banner uploaded successfully",
+        college: updatedCollege,
+      });
+    } catch (err) {
+      res.status(500).json({ message: err.message });
     }
-
-    res.json({ message: 'Banner uploaded successfully', college: updatedCollege });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
   }
-});
+);
 
 /**
  * @route POST /colleges/:collegeId/faculty/:facultyId/upload-image
@@ -259,7 +305,7 @@ router.post('/colleges/:id/upload-banner', authenticate, cloudinaryUploadMiddlew
  * @returns {Object} 500 - Error message if an internal server error occurs.
  */
 router.post(
-  '/colleges/:collegeId/faculty/:facultyId/upload-image',
+  "/colleges/:collegeId/faculty/:facultyId/upload-image",
   authenticate,
   cloudinaryUploadMiddleware,
   async (req, res) => {
@@ -271,22 +317,24 @@ router.post(
       const updatedCollege = await College.findOneAndUpdate(
         {
           _id: collegeId,
-          'faculty._id': facultyId, // Match the specific faculty member
+          "faculty._id": facultyId, // Match the specific faculty member
         },
         {
           $set: {
-            'faculty.$.image': filePath, // Update the image field of the matched faculty member
+            "faculty.$.image": filePath, // Update the image field of the matched faculty member
           },
         },
         { new: true }
       );
 
       if (!updatedCollege) {
-        return res.status(404).json({ message: 'College or faculty member not found' });
+        return res
+          .status(404)
+          .json({ message: "College or faculty member not found" });
       }
 
       res.json({
-        message: 'Profile picture uploaded successfully',
+        message: "Profile picture uploaded successfully",
         college: updatedCollege,
       });
     } catch (err) {
