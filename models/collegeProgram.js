@@ -7,7 +7,11 @@ const programSchema = new mongoose.Schema({
   eligibility: { type: String, default: 'NA' },
   description: { type: String,  },
   career: { type: String,  },
-  features: { type: [String],  },
+  features: { type: [String]  },
+  colleges: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'College',
+  }]
 });
 
 const collegeSchema = new mongoose.Schema({
