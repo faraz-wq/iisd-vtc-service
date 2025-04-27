@@ -24,7 +24,7 @@ router.post('/', authenticate, async (req, res) => {
 // Get all programs
 router.get('/', async (req, res) => {
   try { 
-    const programs = await Program.find().populate('colleges'); // Populate colleges field
+    const programs = await Program.find().populate('colleges','name shortName'); // Populate colleges field
     res.json(programs);
   } catch (err) {
     res.status(500).json({ message: err.message });

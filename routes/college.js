@@ -115,6 +115,27 @@ router.get("/:id", async (req, res) => {
     const college = await College.findById(req.params.id).populate("programs"); // Populate referenced programs
     if (!college) return res.status(404).json({ message: "College not found" });
     res.json(college);
+   
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+/**
+ * @route GET /colleges/:id
+ * @description Retrieve a single college by ID.
+ * @access Private (requires authentication)
+ * @param {string} req.params.shortName - The shortName of the college to retrieve. (Required)
+ * @returns {Object} 200 - The college object, with referenced programs populated.
+ * @returns {Object} 404 - Error message if the college is not found.
+ * @returns {Object} 500 - Error message if an internal server error occurs.
+ */
+router.get("/short/:shortName", async (req, res) => {
+  try {
+    const college = await College.findOne({shortName: req.params.shortName}).populate("programs"); // Populate referenced programs
+    if (!college) return res.status(404).json({ message: "College not found" });
+    res.json(college);
+   
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
