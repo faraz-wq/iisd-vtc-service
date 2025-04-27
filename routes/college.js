@@ -92,7 +92,7 @@ router.post("/", authenticate, handleFileUploads, async (req, res) => {
  * @returns {Object[]} 200 - An array of college objects, with referenced programs populated.
  * @returns {Object} 500 - Error message if an internal server error occurs.
  */
-router.get("/", authenticate, async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const colleges = await College.find().populate("programs"); // Populate referenced programs
     res.json(colleges);
@@ -110,7 +110,7 @@ router.get("/", authenticate, async (req, res) => {
  * @returns {Object} 404 - Error message if the college is not found.
  * @returns {Object} 500 - Error message if an internal server error occurs.
  */
-router.get("/:id", authenticate, async (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
     const college = await College.findById(req.params.id).populate("programs"); // Populate referenced programs
     if (!college) return res.status(404).json({ message: "College not found" });

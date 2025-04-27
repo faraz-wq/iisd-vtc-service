@@ -1,5 +1,5 @@
 const express = require('express');
-const { Program } = require('../models/collegeProgram');
+const { Program, College } = require('../models/collegeProgram');
 const jwt = require('jsonwebtoken');
 const authenticate = require('../middleware/auth');
 const mongoose = require('mongoose');
@@ -22,7 +22,7 @@ router.post('/', authenticate, async (req, res) => {
 });
 
 // Get all programs
-router.get('/', authenticate, async (req, res) => {
+router.get('/', async (req, res) => {
   try { 
     const programs = await Program.find().populate('colleges'); // Populate colleges field
     res.json(programs);
@@ -32,7 +32,7 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 // Get a single program
-router.get('/:id', authenticate, async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     const program = await Program.findById(req.params.id).populate('colleges'); // Populate colleges field
     if (!program) return res.status(404).json({ message: 'Program not found' });
@@ -53,28 +53,42 @@ router.put('/:id', authenticate, async (req, res) => {
       return res.status(400).json({ message: 'Invalid program ID' });
     }
 
-    // Perform the update in two steps to avoid conflicts
+    // Perform the update in steps to avoid conflicts
     let updatedProgram;
 
-    // Step 1: Add colleges
+    // Step 1: Add colleges to the program and update the college's programs array
     if (addColleges && Array.isArray(addColleges)) {
+      // Add colleges to the program
       updatedProgram = await Program.findByIdAndUpdate(
         id,
         { $addToSet: { colleges: { $each: addColleges } } }, // Use $addToSet to avoid duplicates
         { new: true }
       );
-    }
 
-    // Step 2: Remove colleges
-    if (removeColleges && Array.isArray(removeColleges)) {
-      updatedProgram = await Program.findByIdAndUpdate(
-        id,
-        { $pull: { colleges: { $in: removeColleges } } },
-        { new: true }
+      // Add the program ID to each college's programs array
+      await College.updateMany(
+        { _id: { $in: addColleges } }, // Match colleges by their IDs
+        { $addToSet: { programs: id } } // Add the program ID to the programs array
       );
     }
 
-    // Step 3: Update other fields
+    // Step 2: Remove colleges from the program and update the college's programs array
+    if (removeColleges && Array.isArray(removeColleges)) {
+      // Remove colleges from the program
+      updatedProgram = await Program.findByIdAndUpdate(
+        id,
+        { $pull: { colleges: { $in: removeColleges } } }, // Remove colleges from the program
+        { new: true }
+      );
+
+      // Remove the program ID from each college's programs array
+      await College.updateMany(
+        { _id: { $in: removeColleges } }, // Match colleges by their IDs
+        { $pull: { programs: id } } // Remove the program ID from the programs array
+      );
+    }
+
+    // Step 3: Update other fields of the program
     if (Object.keys(updateData).length > 0) {
       updatedProgram = await Program.findByIdAndUpdate(
         id,

@@ -5,6 +5,8 @@ import cors from 'cors'; // Import the cors package
 import authRoutes from './routes/auth.js';
 import programRoutes from './routes/program.js';
 import collegeRoutes from './routes/college.js';
+import inquiryRoutes from './routes/inquiry.js';
+import formRoutes from './routes/forms.js';
 import cookieParser from 'cookie-parser';
 
 // Load environment variables
@@ -39,7 +41,8 @@ app.use('/uploads', express.static('uploads'));
 app.use('/auth', authRoutes);
 app.use('/programs', programRoutes);
 app.use('/colleges', collegeRoutes);
-
+app.use('/inquiries', inquiryRoutes);
+app.use('/forms', formRoutes)
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('Connected to MongoDB'))
