@@ -48,7 +48,7 @@ router.get("/", async (req, res) => {
 });
 
 // 3. Get a single inquiry by ID (GET)
-router.get("/:id", async (req, res) => {
+router.get("/:id", authenticate, async (req, res) => {
   try {
     const inquiry = await Inquiry.findById(req.params.id);
 
@@ -62,29 +62,9 @@ router.get("/:id", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
-// 4. Update an inquiry by ID (PUT)
-router.put("/:id", async (req, res) => {
-  try {
-    const updatedInquiry = await Inquiry.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true } // Return the updated document
-    );
-
-    if (!updatedInquiry) {
-      return res.status(404).json({ error: "Inquiry not found" });
-    }
-
-    res.status(200).json({ message: "Inquiry updated successfully", data: updatedInquiry });
-  } catch (error) {
-    console.error("Error updating inquiry:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
+ 
 // 5. Delete an inquiry by ID (DELETE)
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", authenticate, async (req, res) => {
   try {
     const deletedInquiry = await Inquiry.findByIdAndDelete(req.params.id);
 
