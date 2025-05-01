@@ -15,15 +15,9 @@ dotenv.config();
 const app = express();
 
 
-// Use CORS middleware
-app.use(cors(corsOptions));
-app.use(express.json());
-app.use(cookieParser());
-
 // Parse ALLOWED_ORIGINS from .env as an array
 const allowedOrigins = JSON.parse(process.env.ALLOWED_ORIGINS || '[]');
 
-// Configure CORS options
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -34,6 +28,12 @@ const corsOptions = {
   },
   credentials: true, // Allow cookies or authorization headers
 };
+
+// Use CORS middleware
+app.use(cors(corsOptions));
+app.use(express.json());
+app.use(cookieParser());
+
 
 // Routes
 app.get('/', (req, res) => {
