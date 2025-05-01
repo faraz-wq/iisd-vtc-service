@@ -1,6 +1,6 @@
 import express from "express";
 import Inquiry from "../models/inquiry"; // Import the Mongoose model
-
+import authenticate from "../middleware/auth";
 const router = express.Router();
 
 // Middleware to parse JSON

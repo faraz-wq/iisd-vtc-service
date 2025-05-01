@@ -1,5 +1,6 @@
 import express from "express";
-import FormSubmission from "../models/forms"; // Import the generic model
+import FormSubmission from "../models/forms"; 
+import authenticate from "../middleware/auth";
 
 const router = express.Router();
 
