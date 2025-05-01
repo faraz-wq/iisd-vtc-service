@@ -14,7 +14,9 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
+
+// Use CORS middleware
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
@@ -33,11 +35,10 @@ const corsOptions = {
   credentials: true, // Allow cookies or authorization headers
 };
 
-// Use CORS middleware
-app.use(cors(corsOptions));
-
 // Routes
-app.use('/', ()=>('Welcome to iisdvtc'));
+app.get('/', (req, res) => {
+  res.send('Welcome to iisdvtc');
+});
 app.use('/uploads', express.static('uploads'));
 app.use('/auth', authRoutes);
 app.use('/programs', programRoutes);
