@@ -37,6 +37,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Routes
+app.use('/', ()=>('Welcome to iisdvtc'));
 app.use('/uploads', express.static('uploads'));
 app.use('/auth', authRoutes);
 app.use('/programs', programRoutes);
