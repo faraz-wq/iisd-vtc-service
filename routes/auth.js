@@ -58,14 +58,8 @@ router.post('/login', async (req, res) => {
       sameSite: 'lax',
     });
 
-    res.cookie('user',  user.username, {
-      httpOnly: true, // Prevents client-side JavaScript access
-      secure: process.env.NODE_ENV === 'production', // Use HTTPS in production
-      sameSite: 'strict', // Prevents cross-site requests
-      maxAge: 24*36000000000000, 
-      sameSite: 'lax',
-    });
-    res.json({ message: 'Login successful' });
+
+    res.json({ username: user.username, message: 'Login successful' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
