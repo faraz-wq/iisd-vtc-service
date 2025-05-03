@@ -56,6 +56,7 @@ const upload = multer({
   { name: "logo", maxCount: 1 }, // Single logo upload
   { name: "banner", maxCount: 1 }, // Single banner upload
   { name: "facultyImages", maxCount: 10 }, // Multiple faculty images
+  { name: "image", maxCount: 1 } // Or use this if you prefer single image uploads
 ]);
 
 /**
@@ -76,6 +77,7 @@ const handleFileUploads = async (req, res, next) => {
       });
     });
 
+    console.log(req.files);
     // Check if any files were uploaded
     if (!req.files || Object.keys(req.files).length === 0) {
       console.log("No files were uploaded.");
@@ -101,6 +103,10 @@ const handleFileUploads = async (req, res, next) => {
       );
     }
 
+    if (req.files["image"]) {
+      uploadedFiles.image = await uploadToCloudinary(req.files["image"][0]);
+    }
+    console.log(uploadedFiles);
     // Attach uploaded file URLs to the request object
     req.uploadedFiles = uploadedFiles;
 

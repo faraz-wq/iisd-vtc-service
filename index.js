@@ -8,6 +8,7 @@ import collegeRoutes from './routes/college.js';
 import inquiryRoutes from './routes/inquiry.js';
 import formRoutes from './routes/forms.js';
 import cookieParser from 'cookie-parser';
+import galleryRoutes from './routes/gallery.js';
 
 // Load environment variables
 dotenv.config();
@@ -45,6 +46,7 @@ app.use('/programs', programRoutes);
 app.use('/colleges', collegeRoutes);
 app.use('/inquiries', inquiryRoutes);
 app.use('/forms', formRoutes)
+app.use('/gallery', galleryRoutes);
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('Connected to MongoDB'))
