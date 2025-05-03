@@ -37,7 +37,7 @@ router.post("/", async (req, res) => {
 });
 
 // 2. Get all inquiries (GET)
-router.get("/", async (req, res) => {
+router.get("/", authenticate, async (req, res) => {
   try {
     const inquiries = await Inquiry.find().sort({ createdAt: -1 }); // Sort by newest first
     res.status(200).json(inquiries);
