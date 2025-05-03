@@ -1,7 +1,6 @@
 import express from "express";
 import mongoose from "mongoose";
 import handleFileUploads from "../middleware/fileUploadMiddleware.js";
-import { College } from "../models/collegeProgram.js";
 import Gallery from "../models/galleryImage.js";
 const cloudinary = require("cloudinary").v2;
 
