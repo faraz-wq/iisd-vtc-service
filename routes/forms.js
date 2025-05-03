@@ -34,7 +34,7 @@ router.post("/", async (req, res) => {
 });
 
 // 2. READ: GET route to fetch all form submissions
-router.get("/", async (req, res) => {
+router.get("/", authenticate, async (req, res) => {
   try {
     const submissions = await FormSubmission.find();  
     res.status(200).json({
