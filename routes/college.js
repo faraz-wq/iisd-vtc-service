@@ -101,6 +101,15 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/nav", async (req, res) => {
+  try {
+    const colleges = await College.find().select('name shortName');
+    res.json(colleges);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+})
+
 /**
  * @route GET /colleges/:id
  * @description Retrieve a single college by ID.
