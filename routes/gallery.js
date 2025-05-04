@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import handleFileUploads from "../middleware/fileUploadMiddleware.js";
 import Gallery from "../models/galleryImage.js";
+import { College } from "../models/collegeProgram.js";
 const cloudinary = require("cloudinary").v2;
 
 const router = express.Router();
@@ -33,9 +34,9 @@ router.get("/", async (req, res) => {
 });
 
 // GET image by ID with populated college info
-router.get("/:id", async (req, res) => {
+router.get("/id", async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.query;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return sendApiResponse(res, 400, null, "Invalid ID format");
@@ -102,57 +103,27 @@ router.get("/filter", async (req, res) => {
   }
 });
 
-// Get available filter options (including college names)
-router.get("/filters/options", async (req, res) => {
+router.get("/college/:collegeId", async (req, res) => {
   try {
-    const { filterType } = req.query;
+    const { collegeId } = req.params;
 
-    if (!["category", "college", "tag"].includes(filterType)) {
-      return sendApiResponse(res, 400, [], "Invalid filter type");
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(collegeId)) {
+      return res.status(400).json({ message: "Invalid college ID" });
     }
 
-    const images = await Gallery.find().populate("colleges", "name");
-
-    const optionsMap = new Map();
-
-    images.forEach((img) => {
-      if (filterType === "category") {
-        const val = img.category;
-        if (val) optionsMap.set(val, (optionsMap.get(val) || 0) + 1);
-      } else if (filterType === "college") {
-        img.colleges?.forEach((college) => {
-          optionsMap.set(college.name, (optionsMap.get(college.name) || 0) + 1);
-        });
-      } else if (filterType === "tag") {
-        img.tags?.forEach((tag) => {
-          optionsMap.set(tag, (optionsMap.get(tag) || 0) + 1);
-        });
-      }
-    });
-
-    const options = Array.from(optionsMap.entries()).map(([value, count]) => ({
-      value,
-      label: value,
-      count,
-    }));
-
-    options.sort((a, b) => a.label.localeCompare(b.label));
-    options.unshift({ value: "All", label: "All", count: images.length });
+    const galleryImages = await Gallery.find({
+      colleges: collegeId, // No need to manually cast
+    }).populate('colleges', 'name shortName');
 
     return sendApiResponse(
       res,
       200,
-      options,
-      `Retrieved ${options.length - 1} ${filterType} options`
-    );
+      galleryImages
+    )
   } catch (error) {
-    return sendApiResponse(
-      res,
-      500,
-      [],
-      "Failed to retrieve filter options",
-      error.message
-    );
+    console.error(error);
+    res.status(500).json({ message: "Server error fetching gallery images" });
   }
 });
 
