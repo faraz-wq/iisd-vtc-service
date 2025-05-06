@@ -9,6 +9,7 @@ import inquiryRoutes from './routes/inquiry.js';
 import formRoutes from './routes/forms.js';
 import cookieParser from 'cookie-parser';
 import galleryRoutes from './routes/gallery.js';
+import activityLogger from './middleware/activityLogger.js';
 
 // Load environment variables
 dotenv.config();
@@ -34,7 +35,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
-
+app.use(activityLogger);
 
 // Routes
 app.get('/', (req, res) => {

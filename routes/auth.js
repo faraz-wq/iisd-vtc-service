@@ -1,7 +1,8 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/user'); // Import the User model
+const User = require('../models/user');
+const authenticate = require('../middleware/auth');
 require('dotenv').config();
 
 const router = express.Router();
@@ -29,7 +30,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-router.get('/', async (req, res) => {
+router.get('/', authenticate,  async (req, res) => {
   try {
     const users = await User.find();
     return res.status(200).json(users);
@@ -60,7 +61,7 @@ router.post('/login', async (req, res) => {
     }
 
     // Generate token and send response
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, {
       expiresIn: '24h',
     });
 
