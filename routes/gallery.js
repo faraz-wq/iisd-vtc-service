@@ -2,8 +2,8 @@ import express from "express";
 import mongoose from "mongoose";
 import handleFileUploads from "../middleware/fileUploadMiddleware.js";
 import Gallery from "../models/galleryImage.js";
-import { College } from "../models/collegeProgram.js";
 const cloudinary = require("cloudinary").v2;
+const authenticate = require("../middleware/auth");
 
 const router = express.Router();
 
@@ -128,7 +128,7 @@ router.get("/college/:collegeId", async (req, res) => {
   }
 });
 
-router.post("/upload", handleFileUploads, async (req, res) => {
+router.post("/upload", authenticate, handleFileUploads, async (req, res) => {
   try {
     console.log('req', req.body);
 
@@ -181,7 +181,7 @@ function safeParse(value) {
   }
 }
 
-router.put("/:id", handleFileUploads, async (req, res) => {
+router.put("/:id", authenticate, handleFileUploads, async (req, res) => {
   try {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -236,7 +236,7 @@ router.put("/:id", handleFileUploads, async (req, res) => {
 });
 
 // Delete a gallery image
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", authenticate, async (req, res) => {
   try {
     const { id } = req.params;
 
