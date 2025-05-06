@@ -9,6 +9,7 @@ const router = express.Router();
 
 // Helper: Send standardized API response
 const sendApiResponse = (res, status, data, message, error = null) => {
+  
   return res.status(status).json({
     status,
     data,
@@ -127,69 +128,88 @@ router.get("/college/:collegeId", async (req, res) => {
   }
 });
 
-// Upload single gallery image
 router.post("/upload", handleFileUploads, async (req, res) => {
   try {
-    if (!req.uploadedFiles.image) {
+    console.log('req', req.body);
+
+    if (!req.uploadedFiles?.image) {
       return res.status(400).json({ message: "No image uploaded" });
     }
 
+    function safeParse(value) {
+      if (typeof value !== 'string') return value;
+      try {
+        return JSON.parse(value);
+      } catch (e) {
+        return value;
+      }
+    }
+
+    const title = req.body.title;
+    const description = req.body.description || "";
+    const alt = req.body.alt || "Gallery Image";
+    const category = req.body.category || "";
+    const tags = safeParse(req.body.tags) || [];
+    const colleges = req.body.colleges 
+      ? safeParse(req.body.colleges).map(id => new mongoose.Types.ObjectId(id)) 
+      : [];
+
     const imageData = {
       src: req.uploadedFiles.image,
-      alt: req.body.alt || "Gallery Image",
-      category: req.body.category || "",
-      title: req.body.title,
-      description: req.body.description || "",
-      colleges: req.body.colleges
-        ? JSON.parse(req.body.colleges).map(
-            (id) => new mongoose.Types.ObjectId(id)
-          )
-        : [],
-      tags: req.body.tags ? JSON.parse(req.body.tags) : [],
+      alt,
+      category,
+      title,
+      description,
+      colleges,
+      tags,
     };
 
     const savedImage = await Gallery.create(imageData);
     res.status(201).json(savedImage);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error saving image", error: error.message });
+    console.error({ message: "Error saving image", error: error.message });
+    res.status(500).json({ message: "Error saving image", error: error.message });
   }
 });
-
 // Update an existing gallery image
+function safeParse(value) {
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch (e) {
+    return value;
+  }
+}
+
 router.put("/:id", handleFileUploads, async (req, res) => {
   try {
     const { id } = req.params;
-
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return sendApiResponse(res, 400, null, "Invalid ID format");
     }
 
-    // Find the existing image
     const existingImage = await Gallery.findById(id);
     if (!existingImage) {
       return sendApiResponse(res, 404, null, "Image not found");
     }
 
-    // Prepare update data
     const updateData = {
       alt: req.body.alt || existingImage.alt,
       category: req.body.category || existingImage.category,
       title: req.body.title || existingImage.title,
       description: req.body.description || existingImage.description,
       colleges: req.body.colleges
-        ? JSON.parse(req.body.colleges).map(
+        ? (safeParse(req.body.colleges) || []).map(
             (id) => new mongoose.Types.ObjectId(id)
           )
         : existingImage.colleges,
-      tags: req.body.tags ? JSON.parse(req.body.tags) : existingImage.tags,
+      tags: req.body.tags
+        ? safeParse(req.body.tags)
+        : existingImage.tags,
     };
 
-    // If a new image was uploaded, update the src
     if (req.uploadedFiles?.image) {
       updateData.src = req.uploadedFiles.image;
-      // TODO: Optionally delete the old image from Cloudinary here
     }
 
     const updatedImage = await Gallery.findByIdAndUpdate(id, updateData, {
@@ -204,6 +224,7 @@ router.put("/:id", handleFileUploads, async (req, res) => {
       "Image updated successfully"
     );
   } catch (error) {
+    console.error(error.message);
     return sendApiResponse(
       res,
       500,
